@@ -1,15 +1,39 @@
-// import { ArrowRight } from 'phosphor-react';
-
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
 export default function Username() {
+  const usernameFormSchema = z.object({
+    username: z
+      .string()
+      .min(3, { message: "Usuário deve ter pelo menos 3 caracteres" })
+      .regex(/^[a-zA-Z]+$/, { message: "Usuário deve conter apenas letras" })
+      .toLowerCase()
+  });
+
+  type UsernameFormData = z.infer<typeof usernameFormSchema>;
+
+  const { register, handleSubmit, formState: { errors} } = useForm<UsernameFormData>({
+    resolver: zodResolver(usernameFormSchema),
+  });
+
+  async function handlePreRegister(data: UsernameFormData) {
+    console.log(data.username);
+  }
+
   return (
-    <form className="grid grid-cols-1 gap-4 w-90 p-2 rounded-md">
+    <form
+      onSubmit={handleSubmit(handlePreRegister)}
+      className="grid grid-cols-1 gap-4 w-90 p-2 rounded-md"
+    >
       <input
         type="text"
         className="text-sm p-2 rounded-md border border-emerald-600 outline-0  focus:border-emerald-500"
         placeholder="Digite seu nome de usuário"
         required
+        {...register("username")}
       />
       <div className="">
         <button
@@ -19,6 +43,13 @@ export default function Username() {
           Reservar usuário
           <ArrowRight className="ml-2" />
         </button>
+        <div className="mt-4 text-gray-500">
+          {errors.username ? (
+            <span>{errors.username.message}</span>
+          ) : (
+            'Digite o nome do usuário desejado'
+          )}
+        </div>
       </div>
     </form>
   );
