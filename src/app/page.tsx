@@ -19,8 +19,8 @@ export default function Home() {
     "
     >
       <div className="max-w-[480px] p-10">
-        <h1 className="text-4xl font-bold">Agendamento descomplicado</h1>
-        <p className="lg pt-4 text-gray-400 pb-2">
+        <h1 className="text-4xl font-bold text-[var(--muted)]">Agendamento descomplicado</h1>
+        <p className="lg pt-4 text-[var(--muted-foreground)] pb-2">
           Conecte seu calendário e permite que as pessoas marquem agendamentos no seu tempo livre.
         </p>
         <div>
