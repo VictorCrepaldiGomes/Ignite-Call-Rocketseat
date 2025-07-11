@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -16,9 +18,20 @@ export async function POST(request: Request) {
     );
   }
 
+
   const user = await prisma.user.create({
     data: { username, name },
   });
+
+  const cookieStore = await cookies();
+  cookieStore.set('session', user.id, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  });
+
+  const sessionCookie = cookieStore.get("session");
+
+  console.log('Session Cookie:', sessionCookie);
 
   return NextResponse.json(user, { status: 201 });
 }
