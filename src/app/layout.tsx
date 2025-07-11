@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
   title: "Login - Ignite Call",
@@ -16,6 +16,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className="antialiased bg-[var(--foreground)]">
         {children}
+        <Toaster />
       </body>
     </html>
   );

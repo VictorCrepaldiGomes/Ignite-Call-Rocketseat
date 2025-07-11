@@ -9,6 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
+import axios from "axios";
+
 
 export default function RegisterForm() {
   const useFormSchema = z.object({
@@ -53,11 +56,19 @@ export default function RegisterForm() {
       await api.post("/users", {
         name: data.name,
         username: data.username,
-      })
-
-    } catch(error) {
-      console.log("Erro ao registrar usuário:", error);
-      
+      });
+      toast.success(
+        "Usuário registrado com sucesso! Você pode editar essas informações depois."
+      );
+    } catch (error) {
+     if(axios.isAxiosError(error)) {
+        const apiMessage = error?.response?.data?.message;
+        if (apiMessage === 'Usuário já existe') {
+          toast.error('Usuário já existe, tente outro!')
+          return
+        }
+     }
+      toast.error("Erro ao registrar usuário, tente novamente.");
     }
   }
 
