@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import RegisterForm from "./register-form";
+import RegisterCalendar from "./register-calender";
 
 export default function RegisterPage() {
   return (
     <Suspense>
-      <RegisterForm />
+      <RegisterCalendar />
     </Suspense>
   );
 }

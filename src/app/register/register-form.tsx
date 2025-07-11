@@ -60,6 +60,7 @@ export default function RegisterForm() {
       toast.success(
         "Usuário registrado com sucesso! Você pode editar essas informações depois."
       );
+     router.push('/register/register-calendar')
     } catch (error) {
      if(axios.isAxiosError(error)) {
         const apiMessage = error?.response?.data?.message;
