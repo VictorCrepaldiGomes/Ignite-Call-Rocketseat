@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Username() {
   const usernameFormSchema = z.object({
@@ -21,13 +21,19 @@ export default function Username() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<UsernameFormData>({
     resolver: zodResolver(usernameFormSchema),
   });
 
+  const router = useRouter();
+
   async function handlePreRegister(data: UsernameFormData) {
-    console.log(data.username);
+    const { username } = data;
+
+    await router.push(`/register?username=${username}`);
+
+    
   }
 
   return (
@@ -43,11 +49,9 @@ export default function Username() {
         {...register("username")}
       />
       <div className="">
-        <Button className="bg-emerald-700" asChild>
-          <Link href="/register">
+        <Button className="bg-emerald-700" disabled={isSubmitting}>
             Reservar usuário
             <ArrowRight />
-          </Link>
         </Button>
         <div className="mt-4 text-gray-500">
           {errors.username ? (
