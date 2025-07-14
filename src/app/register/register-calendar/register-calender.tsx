@@ -9,6 +9,8 @@ export default function RegisterCalendar() {
   const session = useSession();
 
   console.log(session);
+
+  
   return (
     <div className="flex flex-col items-center justify-center text-justify min-h-screen ">
       <header className="w-full max-w-xl text-center mb-8 rounded-md p-10 border border-emerald-500">
