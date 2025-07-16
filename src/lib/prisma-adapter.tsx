@@ -84,7 +84,7 @@ export function PrismaAdapter(): Adapter {
         where: { id: user.id },
         data: {
           name: user.name ?? '',
-          username: user.username,
+          username: user.username ?? '',
           email: user.email,
           avatar_url: user.image,
         },

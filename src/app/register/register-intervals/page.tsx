@@ -5,13 +5,58 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import StepperLayout from "@/components/ui/origin_ui/stepperLayout";
 import { getWeekDays } from "@/utils/get-week-days";
+import { timeToString } from "@/utils/time-to-string";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import z from "zod";
+import { z } from "zod";
+import { toast } from "sonner";
 
-const timeInvertalsFormSchema = z.object({});
+const timeIntervalsFormSchema = z.object({
+  intervals: z
+    .array(
+      z.object({
+        weekDay: z.number().min(0).max(6),
+        enabled: z.boolean(),
+        startTime: z.string(),
+        endTime: z.string(),
+      })
+    )
+    .length(7)
+    .refine((intervals) => intervals.some((interval) => interval.enabled), {
+      message: "Você deve selecionar pelo menos um dia da semana.",
+    })
+
+    .refine(
+      (intervals) =>
+        intervals
+          .filter((i) => i.enabled)
+          .every((i) => {
+            const start = timeToString(i.startTime);
+            const end = timeToString(i.endTime);
+            return end - 60 >= start;
+          }),
+      {
+        message:
+          "O horário de término deve ser pelo menos 1 hora após o horário de início.",
+      }
+    )
+    .transform((intervals) => intervals.filter((interval) => interval.enabled))
+    .transform((intervals) =>
+      intervals.map((interval) => ({
+        weekDay: interval.weekDay,
+        startTimeInMinutes: timeToString(interval.startTime),
+        endTimeInMinutes: timeToString(interval.endTime),
+      }))
+    ),
+});
+
+type TimeIntervalsFormData = z.infer<typeof timeIntervalsFormSchema>;
 
 export default function RegisterIntervals() {
+  const { data: session } = useSession();
+
   const {
     register,
     handleSubmit,
@@ -19,6 +64,7 @@ export default function RegisterIntervals() {
     control,
     formState: { isSubmitting, errors },
   } = useForm({
+    resolver: zodResolver(timeIntervalsFormSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: "09:00", endTime: "18:00" },
@@ -41,7 +87,25 @@ export default function RegisterIntervals() {
 
   const intervals = watch("intervals");
 
-  async function handleSetTimeIntervals() {}
+  async function handleSetTimeIntervals(data: TimeIntervalsFormData) {
+    if (!session?.user?.id) {
+      console.error("Usuário não autenticado");
+      return;
+    }
+    await fetch("/api/intervals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: session.user.id,
+        intervals: data.intervals,
+      }),
+    });
+    if (!session.user.id) {
+      toast.error("Erro ao definir horários. Usuário não autenticado.");
+      return;
+    }
+    toast.success("Horários definidos com sucesso!");
+  }
 
   return (
     <div className="flex flex-col items-center justify-center text-justify min-h-screen ">
@@ -54,24 +118,22 @@ export default function RegisterIntervals() {
           da semana!
         </p>
         <StepperLayout currentStep={3} />
-        {fields.map((field, index) => (
-          <form onSubmit={handleSubmit(handleSetTimeIntervals)} key={field.id}>
-            <Card className="flex mt-4 !border-none p-2 px-0">
+        <form onSubmit={handleSubmit(handleSetTimeIntervals)}>
+          {fields.map((field, index) => (
+            <Card className="flex mt-4 !border-none p-2 px-0" key={field.id}>
               <CardContent className="flex items-center justify-between w-full p-0">
                 <div className="flex items-center gap-2">
                   <Controller
                     name={`intervals.${field.weekDay}.enabled`}
                     control={control}
-                    render={({ field }) => {
-                      return (
-                        <Checkbox
-                          onCheckedChange={(checked) =>
-                            field.onChange(checked === true)
-                          }
-                          checked={field.value}
-                        />
-                      );
-                    }}
+                    render={({ field }) => (
+                      <Checkbox
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                        checked={field.value}
+                      />
+                    )}
                   />
                   <strong className="text-white">
                     {weekDays[field.weekDay]}
@@ -79,27 +141,33 @@ export default function RegisterIntervals() {
                 </div>
                 <div className="flex gap-8">
                   <input
-                    className="text-white"
+                    className="text-white bg-emerald-700 rounded-md p-2"
                     type="time"
-                    value={field.startTime}
                     disabled={intervals[index].enabled === false}
                     {...register(`intervals.${field.weekDay}.startTime`)}
                   />
                   <input
-                    className="text-white"
+                    className="text-white bg-emerald-700 rounded-md p-2"
                     type="time"
-                    value={field.endTime}
                     disabled={intervals[index].enabled === false}
                     {...register(`intervals.${field.weekDay}.endTime`)}
                   />
                 </div>
               </CardContent>
             </Card>
-          </form>
-        ))}
-        <Button className="bg-emerald-700 w-full mt-4">
-          Próximo passo <ArrowRight />
-        </Button>
+          ))}
+          <Button
+            className="bg-emerald-700 w-full mt-4"
+            disabled={isSubmitting}
+          >
+            Próximo passo <ArrowRight />
+          </Button>
+          {errors.intervals && (
+            <strong className="text-red-500 mt-2 flex justify-center">
+              {errors.intervals.root?.message}
+            </strong>
+          )}
+        </form>
       </header>
     </div>
   );
