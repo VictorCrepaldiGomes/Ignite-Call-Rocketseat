@@ -55,7 +55,18 @@ const timeIntervalsFormSchema = z.object({
 type TimeIntervalsFormData = z.infer<typeof timeIntervalsFormSchema>;
 
 export default function RegisterIntervals() {
-  const { data: session } = useSession();
+  type SessionUserWithId = {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    id: string;
+  };
+
+  type SessionWithUserId = {
+    user?: SessionUserWithId;
+  };
+
+  const { data: session } = useSession() as { data: SessionWithUserId | null };
 
   const {
     register,
