@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const timeIntervalsFormSchema = z.object({
   intervals: z
@@ -89,6 +90,8 @@ export default function RegisterIntervals() {
     },
   });
 
+  const router = useRouter()
+
   const weekDays = getWeekDays();
 
   const { fields } = useFieldArray({
@@ -115,6 +118,7 @@ export default function RegisterIntervals() {
       toast.error("Erro ao definir horários. Usuário não autenticado.");
       return;
     }
+    await router.push(`/register/update-profile`);
     toast.success("Horários definidos com sucesso!");
   }
 

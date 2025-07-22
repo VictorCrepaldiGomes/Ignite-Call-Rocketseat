@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import StepperLayout from "@/components/ui/origin_ui/stepperLayout";
 import { ArrowRight, Check } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterCalendar() {
   const session = useSession();
 
-  console.log(session);
+  const router = useRouter();
 
-  
   return (
     <div className="flex flex-col items-center justify-center text-justify min-h-screen ">
       <header className="w-full max-w-xl text-center mb-8 rounded-md p-10 border border-emerald-500">
@@ -32,11 +32,22 @@ export default function RegisterCalendar() {
               onClick={() => signIn("google")}
               disabled={session.status === "authenticated"}
             >
-              {session.status === "authenticated" ? <Check/> : "Conectar"}
+              {session.status === "authenticated" ? <Check /> : "Conectar"}
             </Button>
           </div>
-          <Button className="bg-emerald-700 w-full">
-            {session.status === "authenticated" ? "Próximo passo" : "É necessário conectar no Google Calendar"} <ArrowRight />
+          <Button
+            className="bg-emerald-700 w-full"
+            type="button"
+            onClick={() => {
+              if (session.status === "authenticated") {
+                router.push("/register/register-intervals");
+              }
+            }}
+          >
+            {session.status === "authenticated"
+              ? "Próximo passo"
+              : "É necessário conectar no Google Calendar"}{" "}
+            <ArrowRight />
           </Button>
         </form>
       </header>
