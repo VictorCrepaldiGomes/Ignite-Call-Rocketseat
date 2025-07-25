@@ -11,23 +11,24 @@ import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-
-
 const updateProfileSchema = z.object({
-  bio: z.string().min(1, "Bio é obrigatória").max(160, "Máximo de 160 caracteres"),
+  bio: z
+    .string()
+    .min(1, "Bio é obrigatória")
+    .max(160, "Máximo de 160 caracteres"),
 });
 
 type UpdateProfileData = z.infer<typeof updateProfileSchema>;
 
 export default function UpdateProfile() {
-
-  const router = useRouter()
+  const router = useRouter();
 
   type SessionUserWithId = {
+    id?: string;
     bio?: string;
     image?: string;
+    username?: string;
   };
-
 
   type SessionWithUserId = {
     user?: SessionUserWithId;
@@ -40,7 +41,6 @@ export default function UpdateProfile() {
   };
   const session = sessionResult.data;
 
-
   const {
     register,
     handleSubmit,
@@ -50,23 +50,33 @@ export default function UpdateProfile() {
   });
 
   async function handleUpdateProfile(data: UpdateProfileData) {
-  if (!session?.user?.id) {
-    toast.error("Usuário não autenticado.");
-    return;
-  }
+    if (!session?.user?.id) {
+      toast.error("Usuário não autenticado.");
+      return;
+    }
 
-  await fetch("/api/profile", { 
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      bio: data.bio,
-      userId: session.user.id, 
-    }),
-  });
-  
-  await router.push(`/schedule/${session?.user?.username}`);
-  toast.success("Perfil atualizado com sucesso!");
-}
+    try {
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bio: data.bio,
+          userId: session.user.id,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Perfil atualizado com sucesso!");
+        router.push(`/schedule/${session?.user?.username}`);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erro ao atualizar perfil.");
+      }
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      toast.error("Erro ao atualizar perfil.");
+    }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center text-justify min-h-screen ">
@@ -95,7 +105,7 @@ export default function UpdateProfile() {
           </div>
           <div>
             <Textarea
-            {...register("bio")}
+              {...register("bio")}
               className="mt-4 border-2 !border-emerald-600 !placeholder:text-white"
               placeholder="Sobre você"
             ></Textarea>
@@ -110,7 +120,6 @@ export default function UpdateProfile() {
               className="bg-emerald-600 w-full"
             >
               {isSubmitting ? "Carregando..." : "Finalizar"} <ArrowRight />
-
             </Button>
           </div>
         </form>
